@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from reactor_sim.control.autopilot import AutopilotController
 from reactor_sim.control.player import PlayerController
 from reactor_sim.core.state import PlantState
 from reactor_sim.events.anomalies import AnomalyManager
@@ -25,6 +26,7 @@ class SimulationEngine:
         self.state = state or PlantState()
         self.state.tick = tick
         self.player = PlayerController()
+        self.autopilot = AutopilotController()
         self.reactor = ReactorSystem()
         self.cooling = CoolingSystem()
         self.turbine = TurbineSystem()
@@ -50,7 +52,10 @@ class SimulationEngine:
         if self.paused:
             return
         self.state.time += self.state.tick * self.speed_multiplier
+
+        self.autopilot.update_step(self.state)
         self.player.apply_step(self.state)
+
         self.reactor.update_step(self.state)
         self.cooling.update_step(self.state)
         self.turbine.update_step(self.state)

@@ -4,25 +4,28 @@ from reactor_sim.core.simulation import SimulationEngine
 
 
 def main() -> None:
-    """Run a short console simulation demo with sensor/alarm visibility."""
+    """Run a short console simulation demo with autopilot + manual overrides."""
     engine = SimulationEngine()
-    engine.run(steps=5)
+    engine.run(steps=4)
 
-    engine.player.set_mode_grid_follow(engine.state)
-    engine.player.increase_load_target(engine.state, steps=4)
-    engine.player.set_valve_mode_high_load(engine.state)
-    engine.player.set_pump_mode_low(engine.state)
-    engine.run(steps=10)
-
-    engine.player.set_advisory_mute(engine.state, True)
-    engine.player.emergency_load_shed(engine.state)
+    engine.player.set_autopilot_enabled(engine.state, True)
+    engine.player.set_autopilot_mode(engine.state, "safe_hold")
     engine.run(steps=6)
 
-    engine.player.acknowledge_alarm(engine.state, "Core temperature trending high")
-    recent = engine.player.recent_alarm_history(engine.state, limit=5)
-    print("Recent alarm history:")
-    for line in recent:
-        print(f"- {line}")
+    engine.player.set_autopilot_mode(engine.state, "load_follow")
+    engine.player.set_mode_grid_follow(engine.state)
+    engine.run(steps=8)
+
+    engine.player.set_valve_mode_idle(engine.state)
+    engine.player.increase_pump_speed(engine.state, steps=2)
+    engine.run(steps=5)
+
+    engine.player.set_autopilot_mode(engine.state, "power_hold")
+    engine.state.control.autopilot_target_power = 55.0
+    engine.run(steps=6)
+
+    engine.player.set_autopilot_enabled(engine.state, False)
+    engine.run(steps=3)
 
 
 if __name__ == "__main__":

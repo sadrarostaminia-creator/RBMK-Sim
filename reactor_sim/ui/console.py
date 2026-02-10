@@ -16,9 +16,13 @@ class ConsoleRenderer:
         """Render concise situational awareness with sensor-vs-real separation."""
         sensors = state.sensors
         safety = state.safety
+        control = state.control
 
+        ap_status = "ON" if control.autopilot_enabled else "OFF"
         top = [
             f"t={state.time:.1f}",
+            f"AP={ap_status}/{control.autopilot_mode}",
+            f"TargetP={control.autopilot_target_power:.1f}%",
             f"REAL CoreT={state.reactor.temperature:.1f}",
             f"SENS CoreT={sensors.values.get('core_temperature', 0.0):.1f}",
             f"REAL RPM={state.turbine.rpm:.1f}",
@@ -42,7 +46,9 @@ class ConsoleRenderer:
             print("ALARMS: none")
 
         if self.debug:
-            recent = state.safety.alarm_history[-3:]
-            print("HISTORY: " + (" || ".join(recent) if recent else "none"))
+            recent_alarm = state.safety.alarm_history[-2:]
+            recent_ap = state.control.decision_log[-2:]
+            print("ALARM-HIST: " + (" || ".join(recent_alarm) if recent_alarm else "none"))
+            print("AP-DECISIONS: " + (" || ".join(recent_ap) if recent_ap else "none"))
 
     # TODO: swap console output for GUI in future steps.

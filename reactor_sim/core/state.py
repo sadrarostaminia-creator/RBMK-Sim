@@ -101,6 +101,20 @@ class SensorSuiteState:
 
 
 @dataclass
+class ControlSystemState:
+    """Control authority state for autopilot status, overrides, and decisions."""
+
+    autopilot_enabled: bool = False
+    autopilot_mode: str = "safe_hold"
+    autopilot_target_power: float = 45.0
+    autopilot_difficulty: str = "normal"
+    override_ticks: Dict[str, int] = field(
+        default_factory=lambda: {"rods": 0, "pump": 0, "valve": 0, "load": 0}
+    )
+    decision_log: List[str] = field(default_factory=list)
+
+
+@dataclass
 class PlantState:
     """Centralized plant state container for the fictional simulator."""
 
@@ -110,5 +124,6 @@ class PlantState:
     electrical: ElectricalSystemState = field(default_factory=ElectricalSystemState)
     safety: SafetySystemState = field(default_factory=SafetySystemState)
     sensors: SensorSuiteState = field(default_factory=SensorSuiteState)
+    control: ControlSystemState = field(default_factory=ControlSystemState)
     time: float = 0.0
     tick: float = 0.1

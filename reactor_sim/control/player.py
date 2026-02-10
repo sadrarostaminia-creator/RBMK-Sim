@@ -30,6 +30,17 @@ class PlayerController:
         self.load_step = max(0.1, load_step)
         self.load_rate_limit = max(0.1, load_rate_limit)
 
+    def set_autopilot_enabled(self, state: PlantState, enabled: bool) -> None:
+        """Enable or disable autopilot instantly."""
+        state.control.autopilot_enabled = enabled
+        status = "ON" if enabled else "OFF"
+        state.control.decision_log.append(f"t={state.time:.1f} player set autopilot {status}")
+
+    def set_autopilot_mode(self, state: PlantState, mode: str) -> None:
+        """Set autopilot mode for subsequent autonomous decisions."""
+        state.control.autopilot_mode = mode
+        state.control.decision_log.append(f"t={state.time:.1f} player mode={mode}")
+
     def raise_rods(self, state: PlantState, steps: int = 1) -> None:
         """Withdraw rods in small increments to increase potential reactivity."""
         delta = self.rod_step * max(1, steps)
@@ -48,6 +59,7 @@ class PlayerController:
         """Request a fictional SCRAM-style full insertion command."""
         state.reactor.scram_requested = True
         state.reactor.desired_rod_insertion = 100.0
+        self._flag_override(state, "rods")
 
     def increase_pump_speed(self, state: PlantState, steps: int = 1) -> None:
         """Increase desired pump speed in small player-adjustable increments."""
@@ -117,7 +129,6 @@ class PlayerController:
         state.electrical.grid_mode = "load_shed"
         self._set_desired_load(state, 10.0)
 
-
     def acknowledge_alarm(self, state: PlantState, alarm_name: str) -> None:
         """Acknowledge an alarm without resolving its root condition."""
         if alarm_name not in state.safety.acknowledged_alarms:
@@ -163,21 +174,36 @@ class PlayerController:
         limited_load_delta = max(-self.load_rate_limit, min(self.load_rate_limit, load_delta))
         electrical.load_target = clamp_percent(electrical.load_target + limited_load_delta)
 
+        self._decay_overrides(state)
+
     def _set_desired_rod(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired rod insertion request."""
         state.reactor.desired_rod_insertion = clamp_percent(desired)
+        self._flag_override(state, "rods")
 
     def _set_desired_pump(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired pump speed request."""
         state.cooling.desired_pump_speed = clamp_percent(desired)
+        self._flag_override(state, "pump")
 
     def _set_desired_valve(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired valve opening request."""
         state.turbine.desired_valve_opening = clamp_percent(desired)
+        self._flag_override(state, "valve")
 
     def _set_desired_load(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired electrical load request."""
         state.electrical.desired_load_target = clamp_percent(desired)
+        self._flag_override(state, "load")
+
+    def _flag_override(self, state: PlantState, control_key: str, ticks: int = 8) -> None:
+        """Mark a control path as player-overridden for a short time window."""
+        state.control.override_ticks[control_key] = max(state.control.override_ticks.get(control_key, 0), ticks)
+
+    def _decay_overrides(self, state: PlantState) -> None:
+        """Decay override timers each tick."""
+        for key, value in state.control.override_ticks.items():
+            state.control.override_ticks[key] = max(0, value - 1)
 
     # TODO: expose this controller to autopilot command arbitration.
     # TODO: add AI advisor suggestions mapped to these control actions.

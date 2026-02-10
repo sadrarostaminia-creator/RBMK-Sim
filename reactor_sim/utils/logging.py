@@ -18,19 +18,21 @@ class LogEntry:
 
 @dataclass
 class EventLog:
-    """In-memory log for snapshots and alarm timeline events."""
+    """In-memory log for snapshots and alarm/autopilot timeline events."""
 
     entries: List[LogEntry] = field(default_factory=list)
     _alarm_cursor: int = 0
+    _autopilot_cursor: int = 0
 
     def capture_snapshot(self, state: PlantState) -> None:
-        """Record plant snapshot plus newly appended alarm history entries."""
+        """Record plant snapshot plus newly appended alarm/autopilot events."""
         message = (
             "Snapshot"
             f" rpm={state.turbine.rpm:.1f}"
             f" out={state.electrical.output_power:.1f}%"
             f" grid_stb={state.electrical.grid_stability:.1f}%"
             f" alarms={len(state.safety.warnings_active)}"
+            f" ap_mode={state.control.autopilot_mode}"
         )
         self.entries.append(LogEntry(timestamp=state.time, message=message))
 
@@ -40,3 +42,10 @@ class EventLog:
                 LogEntry(timestamp=state.time, message=f"AlarmEvent {history[self._alarm_cursor]}")
             )
             self._alarm_cursor += 1
+
+        decisions = state.control.decision_log
+        while self._autopilot_cursor < len(decisions):
+            self.entries.append(
+                LogEntry(timestamp=state.time, message=f"Autopilot {decisions[self._autopilot_cursor]}")
+            )
+            self._autopilot_cursor += 1
