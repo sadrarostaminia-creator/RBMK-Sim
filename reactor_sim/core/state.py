@@ -27,8 +27,14 @@ class ReactorCoreState:
 class CoolingSystemState:
     """Abstract cooling system state."""
 
-    pump_flow: float = 60.0
-    heat_removal_efficiency: float = 65.0
+    pump_speed: float = 58.0
+    desired_pump_speed: float = 58.0
+    flow_rate: float = 50.0
+    heat_removal_efficiency: float = 62.0
+    coolant_temperature: float = 35.0
+    system_health: float = 100.0
+    cooling_effect: float = 0.0
+    warnings_active: List[str] = field(default_factory=list)
 
 
 @dataclass

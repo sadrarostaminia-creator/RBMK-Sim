@@ -30,5 +30,7 @@ class EventLog:
             f" rods={state.reactor.control_rod_insertion:.1f}%"
             f" temp={state.reactor.temperature:.1f}"
             f" fuel={state.reactor.fuel_condition:.1f}%"
+            f" pump={state.cooling.pump_speed:.1f}%"
+            f" cool_eff={state.cooling.heat_removal_efficiency:.1f}%"
         )
         self.entries.append(LogEntry(timestamp=state.time, message=message))

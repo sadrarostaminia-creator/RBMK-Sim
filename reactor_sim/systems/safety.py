@@ -15,6 +15,7 @@ class SafetySystem:
         """Update warnings and trip flags using abstract rules."""
         safety = global_state.safety
         reactor = global_state.reactor
+        cooling = global_state.cooling
         safety.warnings_active.clear()
         safety.trip_flags.setdefault("manual_trip", False)
 
@@ -24,5 +25,9 @@ class SafetySystem:
             safety.warnings_active.append("Power output elevated")
 
         for warning in reactor.warnings_active:
+            if warning not in safety.warnings_active:
+                safety.warnings_active.append(warning)
+
+        for warning in cooling.warnings_active:
             if warning not in safety.warnings_active:
                 safety.warnings_active.append(warning)

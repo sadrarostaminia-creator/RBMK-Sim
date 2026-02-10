@@ -31,8 +31,8 @@ class AnomalyManager:
         reactor = global_state.reactor
         sensors = global_state.sensors
 
-        cooling.pump_flow = clamp_percent(cooling.pump_flow - self.pump_degradation * 0.2)
-        reactor.control_rod_insertion = clamp_percent(
-            reactor.control_rod_insertion + self.rod_lag * 0.1
+        cooling.system_health = clamp_percent(cooling.system_health - self.pump_degradation * 0.05)
+        reactor.desired_rod_insertion = clamp_percent(
+            reactor.desired_rod_insertion + self.rod_lag * 0.1
         )
         sensors.values["drift_bias"] = clamp_percent(self.sensor_drift * 10.0)

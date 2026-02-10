@@ -15,9 +15,9 @@ class ReactorSystem:
         self.reactivity_damping = 0.10
         self.power_inertia = 0.16
         self.base_power_floor = 5.0
-        self.thermal_gain = 0.10
+        self.thermal_gain = 0.12
         self.thermal_release = 0.05
-        self.cooling_influence = 0.08
+        self.cooling_influence = 0.018
         self.fuel_wear_base = 0.004
         self.fuel_wear_stress = 0.010
 
@@ -46,10 +46,10 @@ class ReactorSystem:
             reactor.power + (power_target - reactor.power) * self.power_inertia
         )
 
-        cooling_factor = cooling.heat_removal_efficiency * self.cooling_influence
         heat_input = reactor.power * self.thermal_gain
+        cooling_sink = cooling.cooling_effect * self.cooling_influence
         reactor.thermal_reservoir = clamp_percent(
-            reactor.thermal_reservoir + heat_input - cooling_factor - self.thermal_release
+            reactor.thermal_reservoir + heat_input - cooling_sink - self.thermal_release
         )
         reactor.temperature = clamp_percent(
             reactor.temperature + (reactor.thermal_reservoir - reactor.temperature) * 0.12
