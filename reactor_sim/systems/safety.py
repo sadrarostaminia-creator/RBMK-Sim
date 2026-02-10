@@ -16,6 +16,7 @@ class SafetySystem:
         safety = global_state.safety
         reactor = global_state.reactor
         cooling = global_state.cooling
+        turbine = global_state.turbine
         safety.warnings_active.clear()
         safety.trip_flags.setdefault("manual_trip", False)
 
@@ -24,10 +25,6 @@ class SafetySystem:
         if reactor.power > self.power_warning:
             safety.warnings_active.append("Power output elevated")
 
-        for warning in reactor.warnings_active:
-            if warning not in safety.warnings_active:
-                safety.warnings_active.append(warning)
-
-        for warning in cooling.warnings_active:
+        for warning in reactor.warnings_active + cooling.warnings_active + turbine.warnings_active:
             if warning not in safety.warnings_active:
                 safety.warnings_active.append(warning)

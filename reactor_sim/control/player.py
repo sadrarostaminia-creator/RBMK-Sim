@@ -15,12 +15,16 @@ class PlayerController:
         rod_rate_limit: float = 3.0,
         pump_step: float = 4.0,
         pump_rate_limit: float = 4.0,
+        valve_step: float = 4.0,
+        valve_rate_limit: float = 4.0,
     ) -> None:
         """Initialize manual control limits and defaults."""
         self.rod_step = max(0.1, rod_step)
         self.rod_rate_limit = max(0.1, rod_rate_limit)
         self.pump_step = max(0.1, pump_step)
         self.pump_rate_limit = max(0.1, pump_rate_limit)
+        self.valve_step = max(0.1, valve_step)
+        self.valve_rate_limit = max(0.1, valve_rate_limit)
 
     def raise_rods(self, state: PlantState, steps: int = 1) -> None:
         """Withdraw rods in small increments to increase potential reactivity."""
@@ -63,6 +67,28 @@ class PlayerController:
         """Apply a fictional high cooling preset."""
         self._set_desired_pump(state, 82.0)
 
+    def increase_valve_opening(self, state: PlantState, steps: int = 1) -> None:
+        """Increase turbine valve opening in small increments."""
+        delta = self.valve_step * max(1, steps)
+        self._set_desired_valve(state, state.turbine.desired_valve_opening + delta)
+
+    def decrease_valve_opening(self, state: PlantState, steps: int = 1) -> None:
+        """Decrease turbine valve opening in small increments."""
+        delta = self.valve_step * max(1, steps)
+        self._set_desired_valve(state, state.turbine.desired_valve_opening - delta)
+
+    def set_valve_mode_idle(self, state: PlantState) -> None:
+        """Apply fictional idle valve preset."""
+        self._set_desired_valve(state, 20.0)
+
+    def set_valve_mode_cruise(self, state: PlantState) -> None:
+        """Apply fictional cruise valve preset."""
+        self._set_desired_valve(state, 50.0)
+
+    def set_valve_mode_high_load(self, state: PlantState) -> None:
+        """Apply fictional high-load valve preset."""
+        self._set_desired_valve(state, 80.0)
+
     def apply_step(self, state: PlantState) -> None:
         """Rate-limit motion so controls affect systems indirectly and smoothly."""
         reactor = state.reactor
@@ -77,6 +103,11 @@ class PlayerController:
         limited_pump_delta = max(-self.pump_rate_limit, min(self.pump_rate_limit, pump_delta))
         cooling.pump_speed = clamp_percent(cooling.pump_speed + limited_pump_delta)
 
+        turbine = state.turbine
+        valve_delta = turbine.desired_valve_opening - turbine.valve_opening
+        limited_valve_delta = max(-self.valve_rate_limit, min(self.valve_rate_limit, valve_delta))
+        turbine.valve_opening = clamp_percent(turbine.valve_opening + limited_valve_delta)
+
     def _set_desired_rod(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired rod insertion request."""
         state.reactor.desired_rod_insertion = clamp_percent(desired)
@@ -84,6 +115,10 @@ class PlayerController:
     def _set_desired_pump(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired pump speed request."""
         state.cooling.desired_pump_speed = clamp_percent(desired)
+
+    def _set_desired_valve(self, state: PlantState, desired: float) -> None:
+        """Validate and clamp desired valve opening request."""
+        state.turbine.desired_valve_opening = clamp_percent(desired)
 
     # TODO: expose this controller to autopilot command arbitration.
     # TODO: add AI advisor suggestions mapped to these control actions.

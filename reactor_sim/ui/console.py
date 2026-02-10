@@ -16,28 +16,28 @@ class ConsoleRenderer:
         """Render a lightweight status table to the console."""
         reactor = state.reactor
         cooling = state.cooling
+        turbine = state.turbine
         safety = state.safety
         warnings = ", ".join(safety.warnings_active) or "None"
 
         fields = [
             f"t={state.time:.1f}",
-            f"Rods={reactor.control_rod_insertion:.1f}%",
-            f"Pwr={reactor.power:.1f}%",
-            f"Temp={reactor.temperature:.1f}",
-            f"Fuel={reactor.fuel_condition:.1f}%",
+            f"CoreT={reactor.temperature:.1f}",
             f"Pump={cooling.pump_speed:.1f}%",
-            f"Eff={cooling.heat_removal_efficiency:.1f}%",
-            f"CoolT={cooling.coolant_temperature:.1f}",
-            f"Health={cooling.system_health:.1f}%",
+            f"SteamP={turbine.steam_pressure:.1f}",
+            f"Valve={turbine.valve_opening:.1f}%",
+            f"RPM={turbine.rpm:.1f}",
+            f"TurbEff={turbine.turbine_efficiency:.1f}%",
+            f"TurbHP={turbine.turbine_health:.1f}%",
         ]
 
         if self.debug:
             fields.extend(
                 [
-                    f"TargetP={reactor.desired_power_target:.1f}%",
-                    f"TargetPump={cooling.desired_pump_speed:.1f}%",
-                    f"Stress={reactor.stress_index:.1f}",
-                    f"CoolFx={cooling.cooling_effect:.1f}",
+                    f"SteamQ={turbine.steam_quality:.1f}%",
+                    f"SteamProd={turbine.steam_production_rate:.1f}",
+                    f"SteamLoss={turbine.steam_loss_rate:.1f}",
+                    f"MechLoad={turbine.mechanical_load:.1f}",
                 ]
             )
 

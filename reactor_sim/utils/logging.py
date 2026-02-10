@@ -26,11 +26,10 @@ class EventLog:
         """Record a minimal snapshot for debugging and future UI use."""
         message = (
             "Snapshot"
-            f" power={state.reactor.power:.1f}%"
-            f" rods={state.reactor.control_rod_insertion:.1f}%"
             f" temp={state.reactor.temperature:.1f}"
-            f" fuel={state.reactor.fuel_condition:.1f}%"
             f" pump={state.cooling.pump_speed:.1f}%"
-            f" cool_eff={state.cooling.heat_removal_efficiency:.1f}%"
+            f" steam_p={state.turbine.steam_pressure:.1f}"
+            f" valve={state.turbine.valve_opening:.1f}%"
+            f" rpm={state.turbine.rpm:.1f}"
         )
         self.entries.append(LogEntry(timestamp=state.time, message=message))

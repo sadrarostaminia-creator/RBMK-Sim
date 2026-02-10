@@ -39,11 +39,20 @@ class CoolingSystemState:
 
 @dataclass
 class TurbineSystemState:
-    """Abstract turbine system state."""
+    """Abstract steam and turbine state."""
 
-    rpm: float = 40.0
-    valve_opening: float = 50.0
-    steam_pressure: float = 45.0
+    steam_pressure: float = 35.0
+    steam_production_rate: float = 20.0
+    steam_loss_rate: float = 6.0
+    steam_quality: float = 80.0
+    steam_system_health: float = 100.0
+    rpm: float = 20.0
+    valve_opening: float = 30.0
+    desired_valve_opening: float = 30.0
+    mechanical_load: float = 20.0
+    turbine_efficiency: float = 78.0
+    turbine_health: float = 100.0
+    warnings_active: List[str] = field(default_factory=list)
 
 
 @dataclass
