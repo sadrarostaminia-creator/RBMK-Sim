@@ -55,9 +55,9 @@ class SimulationEngine:
         self.cooling.update_step(self.state)
         self.turbine.update_step(self.state)
         self.generator.update_step(self.state)
-        self.safety.update_step(self.state)
         self.anomalies.update_step(self.state)
         self.sensors.update_step(self.state)
+        self.safety.update_step(self.state)
         self.event_log.capture_snapshot(self.state)
 
     def run(self, steps: int = 10, render: bool = True) -> None:

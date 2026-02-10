@@ -18,18 +18,25 @@ class LogEntry:
 
 @dataclass
 class EventLog:
-    """Placeholder event logger with in-memory storage."""
+    """In-memory log for snapshots and alarm timeline events."""
 
     entries: List[LogEntry] = field(default_factory=list)
+    _alarm_cursor: int = 0
 
     def capture_snapshot(self, state: PlantState) -> None:
-        """Record a minimal snapshot for debugging and future UI use."""
+        """Record plant snapshot plus newly appended alarm history entries."""
         message = (
             "Snapshot"
             f" rpm={state.turbine.rpm:.1f}"
             f" out={state.electrical.output_power:.1f}%"
-            f" gen_eff={state.electrical.generator_efficiency:.1f}%"
-            f" demand={state.electrical.grid_demand:.1f}%"
-            f" stability={state.electrical.grid_stability:.1f}%"
+            f" grid_stb={state.electrical.grid_stability:.1f}%"
+            f" alarms={len(state.safety.warnings_active)}"
         )
         self.entries.append(LogEntry(timestamp=state.time, message=message))
+
+        history = state.safety.alarm_history
+        while self._alarm_cursor < len(history):
+            self.entries.append(
+                LogEntry(timestamp=state.time, message=f"AlarmEvent {history[self._alarm_cursor]}")
+            )
+            self._alarm_cursor += 1

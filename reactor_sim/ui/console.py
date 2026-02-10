@@ -13,37 +13,36 @@ class ConsoleRenderer:
         self.debug = debug
 
     def render(self, state: PlantState) -> None:
-        """Render a lightweight status table to the console."""
-        reactor = state.reactor
-        turbine = state.turbine
-        electrical = state.electrical
+        """Render concise situational awareness with sensor-vs-real separation."""
+        sensors = state.sensors
         safety = state.safety
-        warnings = ", ".join(safety.warnings_active) or "None"
 
-        fields = [
+        top = [
             f"t={state.time:.1f}",
-            f"CoreP={reactor.power:.1f}%",
-            f"RPM={turbine.rpm:.1f}",
-            f"ElecOut={electrical.output_power:.1f}%",
-            f"GenEff={electrical.generator_efficiency:.1f}%",
-            f"GridD={electrical.grid_demand:.1f}%",
-            f"GridStb={electrical.grid_stability:.1f}%",
-            f"Mode={electrical.grid_mode}",
+            f"REAL CoreT={state.reactor.temperature:.1f}",
+            f"SENS CoreT={sensors.values.get('core_temperature', 0.0):.1f}",
+            f"REAL RPM={state.turbine.rpm:.1f}",
+            f"SENS RPM={sensors.values.get('turbine_rpm', 0.0):.1f}",
+            f"REAL Out={state.electrical.output_power:.1f}%",
+            f"SENS Out={sensors.values.get('generator_output', 0.0):.1f}%",
         ]
+        print(" | ".join(top))
+
+        alarm_lines = []
+        for name, severity in safety.alarm_severity.items():
+            if severity == "none":
+                continue
+            trend = safety.alarm_trends.get(name, "stable")
+            emoji = "🟢" if severity == "advisory" else "🟡" if severity == "warning" else "🔴"
+            alarm_lines.append(f"{emoji} {name} [{severity}/{trend}]")
+
+        if alarm_lines:
+            print("ALARMS: " + " ; ".join(alarm_lines[:4]))
+        else:
+            print("ALARMS: none")
 
         if self.debug:
-            fields.extend(
-                [
-                    f"Valve={turbine.valve_opening:.1f}%",
-                    f"LoadT={electrical.load_target:.1f}%",
-                    f"GenT={electrical.generator_temperature:.1f}",
-                    f"GenH={electrical.generator_health:.1f}%",
-                    f"Bal={electrical.power_balance:.1f}",
-                    f"Penalty={electrical.penalty_level:.1f}",
-                ]
-            )
-
-        fields.append(f"Warn={warnings}")
-        print(" | ".join(fields))
+            recent = state.safety.alarm_history[-3:]
+            print("HISTORY: " + (" || ".join(recent) if recent else "none"))
 
     # TODO: swap console output for GUI in future steps.

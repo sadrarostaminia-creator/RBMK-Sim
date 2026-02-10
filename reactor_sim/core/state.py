@@ -76,20 +76,28 @@ class ElectricalSystemState:
 
 @dataclass
 class SafetySystemState:
-    """Abstract safety system state with warnings and trip flags."""
+    """Abstract safety monitor state with alarm progression and history."""
 
     warnings_active: List[str] = field(default_factory=list)
     trip_flags: Dict[str, bool] = field(default_factory=dict)
+    alarm_states: Dict[str, float] = field(default_factory=dict)
+    alarm_trends: Dict[str, str] = field(default_factory=dict)
+    alarm_severity: Dict[str, str] = field(default_factory=dict)
+    alarm_history: List[str] = field(default_factory=list)
+    acknowledged_alarms: List[str] = field(default_factory=list)
+    muted_advisories: bool = False
 
 
 @dataclass
 class SensorSuiteState:
-    """Abstract sensor suite state for noise, drift, and delay."""
+    """Abstract sensor suite state for noise, drift, delay, and diagnostics."""
 
     values: Dict[str, float] = field(default_factory=dict)
     noise_levels: Dict[str, float] = field(default_factory=dict)
     drift_rates: Dict[str, float] = field(default_factory=dict)
     delays: Dict[str, float] = field(default_factory=dict)
+    true_values: Dict[str, float] = field(default_factory=dict)
+    health_bias: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

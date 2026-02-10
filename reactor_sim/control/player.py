@@ -117,6 +117,28 @@ class PlayerController:
         state.electrical.grid_mode = "load_shed"
         self._set_desired_load(state, 10.0)
 
+
+    def acknowledge_alarm(self, state: PlantState, alarm_name: str) -> None:
+        """Acknowledge an alarm without resolving its root condition."""
+        if alarm_name not in state.safety.acknowledged_alarms:
+            state.safety.acknowledged_alarms.append(alarm_name)
+            state.safety.alarm_history.append(f"t={state.time:.1f} acknowledged: {alarm_name}")
+            if len(state.safety.alarm_history) > 50:
+                state.safety.alarm_history.pop(0)
+
+    def set_advisory_mute(self, state: PlantState, muted: bool) -> None:
+        """Mute or unmute advisory-level alarm repetition."""
+        state.safety.muted_advisories = bool(muted)
+        state.safety.alarm_history.append(
+            f"t={state.time:.1f} advisory mute {'on' if muted else 'off'}"
+        )
+        if len(state.safety.alarm_history) > 50:
+            state.safety.alarm_history.pop(0)
+
+    def recent_alarm_history(self, state: PlantState, limit: int = 8) -> list[str]:
+        """Return recent alarm history entries for UI/console display."""
+        return state.safety.alarm_history[-max(1, limit):]
+
     def apply_step(self, state: PlantState) -> None:
         """Rate-limit motion so controls affect systems indirectly and smoothly."""
         reactor = state.reactor
