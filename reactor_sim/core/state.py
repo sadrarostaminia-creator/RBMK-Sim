@@ -86,6 +86,8 @@ class SafetySystemState:
     alarm_history: List[str] = field(default_factory=list)
     acknowledged_alarms: List[str] = field(default_factory=list)
     muted_advisories: bool = False
+    active_failures: List[str] = field(default_factory=list)
+    failure_history: List[str] = field(default_factory=list)
 
 
 @dataclass

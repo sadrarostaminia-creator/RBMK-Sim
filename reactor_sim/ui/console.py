@@ -48,6 +48,11 @@ class ConsoleRenderer:
         else:
             print("ALARMS: none")
 
+        if safety.active_failures:
+            print("FAILURES: " + ", ".join(safety.active_failures))
+        else:
+            print("FAILURES: none")
+
         if state.advisor.visible_messages:
             print("ADVISOR: " + state.advisor.visible_messages[-1])
         else:
