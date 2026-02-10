@@ -1,9 +1,17 @@
-"""Application entry point for the fictional reactor simulator (GUI hook placeholder)."""
+"""Application entry point for the fictional reactor simulator (console hook)."""
+
+from reactor_sim.core.simulation import SimulationEngine
 
 
 def main() -> None:
-    """Placeholder main entry point for future UI wiring."""
-    return None
+    """Run a short console simulation demo with manual control hooks."""
+    engine = SimulationEngine()
+    engine.run(steps=5)
+    engine.player.raise_rods(engine.state, steps=3)
+    engine.player.set_power_target(engine.state, 65.0)
+    engine.run(steps=8)
+    engine.player.emergency_insert(engine.state)
+    engine.run(steps=5)
 
 
 if __name__ == "__main__":

@@ -17,7 +17,12 @@ class SafetySystem:
         reactor = global_state.reactor
         safety.warnings_active.clear()
         safety.trip_flags.setdefault("manual_trip", False)
+
         if reactor.temperature > self.temperature_warning:
             safety.warnings_active.append("Core temperature elevated")
         if reactor.power > self.power_warning:
             safety.warnings_active.append("Power output elevated")
+
+        for warning in reactor.warnings_active:
+            if warning not in safety.warnings_active:
+                safety.warnings_active.append(warning)

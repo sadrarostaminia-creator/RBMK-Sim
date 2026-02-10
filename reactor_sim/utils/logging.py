@@ -27,7 +27,8 @@ class EventLog:
         message = (
             "Snapshot"
             f" power={state.reactor.power:.1f}%"
+            f" rods={state.reactor.control_rod_insertion:.1f}%"
             f" temp={state.reactor.temperature:.1f}"
-            f" rpm={state.turbine.rpm:.1f}"
+            f" fuel={state.reactor.fuel_condition:.1f}%"
         )
         self.entries.append(LogEntry(timestamp=state.time, message=message))

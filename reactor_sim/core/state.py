@@ -10,11 +10,17 @@ from typing import Dict, List
 class ReactorCoreState:
     """Abstract reactor core state using fictional values and percentages."""
 
-    power: float = 50.0
-    temperature: float = 50.0
+    power: float = 45.0
+    temperature: float = 48.0
     reactivity: float = 0.0
     fuel_condition: float = 100.0
-    control_rod_insertion: float = 50.0
+    control_rod_insertion: float = 55.0
+    desired_rod_insertion: float = 55.0
+    desired_power_target: float = 45.0
+    thermal_reservoir: float = 50.0
+    warnings_active: List[str] = field(default_factory=list)
+    stress_index: float = 0.0
+    scram_requested: bool = False
 
 
 @dataclass
