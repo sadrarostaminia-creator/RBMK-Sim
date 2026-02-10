@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from reactor_sim.ai.advisor import AdvisorSystem
 from reactor_sim.control.autopilot import AutopilotController
 from reactor_sim.control.player import PlayerController
 from reactor_sim.core.state import PlantState
@@ -27,6 +28,7 @@ class SimulationEngine:
         self.state.tick = tick
         self.player = PlayerController()
         self.autopilot = AutopilotController()
+        self.advisor = AdvisorSystem()
         self.reactor = ReactorSystem()
         self.cooling = CoolingSystem()
         self.turbine = TurbineSystem()
@@ -71,6 +73,7 @@ class SimulationEngine:
         self.anomalies.update_step(self.state)
         self.sensors.update_step(self.state)
         self.safety.update_step(self.state)
+        self.advisor.update_step(self.state)
 
         if self.tutorial is not None:
             self.tutorial.post_step(self.state)

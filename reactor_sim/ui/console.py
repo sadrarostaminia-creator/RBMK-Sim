@@ -22,6 +22,7 @@ class ConsoleRenderer:
         top = [
             f"t={state.time:.1f}",
             f"AP={ap_status}/{control.autopilot_mode}",
+            f"ADV={state.advisor.mode}",
             f"TargetP={control.autopilot_target_power:.1f}%",
             f"REAL CoreT={state.reactor.temperature:.1f}",
             f"SENS CoreT={sensors.values.get('core_temperature', 0.0):.1f}",
@@ -46,6 +47,11 @@ class ConsoleRenderer:
             print("ALARMS: " + " ; ".join(alarm_lines[:4]))
         else:
             print("ALARMS: none")
+
+        if state.advisor.visible_messages:
+            print("ADVISOR: " + state.advisor.visible_messages[-1])
+        else:
+            print("ADVISOR: no message")
 
         if self.debug:
             recent_alarm = state.safety.alarm_history[-2:]

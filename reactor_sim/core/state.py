@@ -112,9 +112,30 @@ class ControlSystemState:
         default_factory=lambda: {"rods": 0, "pump": 0, "valve": 0, "load": 0}
     )
     decision_log: List[str] = field(default_factory=list)
+    player_action_log: List[str] = field(default_factory=list)
     tutorial_active: bool = False
     tutorial_stage: str = ""
     tutorial_objective: str = ""
+
+
+@dataclass
+class AdvisorMessage:
+    """Single advisor message entry for history and UI presentation."""
+
+    timestamp: float
+    category: str
+    text: str
+    level: str
+
+
+@dataclass
+class AdvisorState:
+    """Advisor runtime state including mode, cadence, and message history."""
+
+    mode: str = "guidance"
+    cadence_ticks: int = 5
+    history: List[AdvisorMessage] = field(default_factory=list)
+    visible_messages: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -128,5 +149,6 @@ class PlantState:
     safety: SafetySystemState = field(default_factory=SafetySystemState)
     sensors: SensorSuiteState = field(default_factory=SensorSuiteState)
     control: ControlSystemState = field(default_factory=ControlSystemState)
+    advisor: AdvisorState = field(default_factory=AdvisorState)
     time: float = 0.0
     tick: float = 0.1

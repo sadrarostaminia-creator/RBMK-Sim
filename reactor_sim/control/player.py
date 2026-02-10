@@ -30,26 +30,37 @@ class PlayerController:
         self.load_step = max(0.1, load_step)
         self.load_rate_limit = max(0.1, load_rate_limit)
 
+
+    def set_advisor_mode(self, state: PlantState, mode: str) -> None:
+        """Set AI advisor communication mode."""
+        if mode in {"silent", "passive", "guidance", "training"}:
+            state.advisor.mode = mode
+            self._note_action(state, f"advisor_mode_{mode}")
+
     def set_autopilot_enabled(self, state: PlantState, enabled: bool) -> None:
         """Enable or disable autopilot instantly."""
         state.control.autopilot_enabled = enabled
         status = "ON" if enabled else "OFF"
         state.control.decision_log.append(f"t={state.time:.1f} player set autopilot {status}")
+        self._note_action(state, "autopilot_toggle")
 
     def set_autopilot_mode(self, state: PlantState, mode: str) -> None:
         """Set autopilot mode for subsequent autonomous decisions."""
         state.control.autopilot_mode = mode
         state.control.decision_log.append(f"t={state.time:.1f} player mode={mode}")
+        self._note_action(state, "autopilot_mode")
 
     def raise_rods(self, state: PlantState, steps: int = 1) -> None:
         """Withdraw rods in small increments to increase potential reactivity."""
         delta = self.rod_step * max(1, steps)
         self._set_desired_rod(state, state.reactor.desired_rod_insertion - delta)
+        self._note_action(state, "raise_rods")
 
     def lower_rods(self, state: PlantState, steps: int = 1) -> None:
         """Insert rods in small increments to reduce potential reactivity."""
         delta = self.rod_step * max(1, steps)
         self._set_desired_rod(state, state.reactor.desired_rod_insertion + delta)
+        self._note_action(state, "lower_rods")
 
     def set_power_target(self, state: PlantState, power_percent: float) -> None:
         """Set a desired abstract power target used by reactor balancing logic."""
@@ -65,11 +76,13 @@ class PlayerController:
         """Increase desired pump speed in small player-adjustable increments."""
         delta = self.pump_step * max(1, steps)
         self._set_desired_pump(state, state.cooling.desired_pump_speed + delta)
+        self._note_action(state, "pump_up")
 
     def decrease_pump_speed(self, state: PlantState, steps: int = 1) -> None:
         """Decrease desired pump speed in small player-adjustable increments."""
         delta = self.pump_step * max(1, steps)
         self._set_desired_pump(state, state.cooling.desired_pump_speed - delta)
+        self._note_action(state, "pump_down")
 
     def set_pump_mode_low(self, state: PlantState) -> None:
         """Apply a fictional low cooling preset."""
@@ -87,11 +100,13 @@ class PlayerController:
         """Increase turbine valve opening in small increments."""
         delta = self.valve_step * max(1, steps)
         self._set_desired_valve(state, state.turbine.desired_valve_opening + delta)
+        self._note_action(state, "valve_up")
 
     def decrease_valve_opening(self, state: PlantState, steps: int = 1) -> None:
         """Decrease turbine valve opening in small increments."""
         delta = self.valve_step * max(1, steps)
         self._set_desired_valve(state, state.turbine.desired_valve_opening - delta)
+        self._note_action(state, "valve_down")
 
     def set_valve_mode_idle(self, state: PlantState) -> None:
         """Apply fictional idle valve preset."""
@@ -109,25 +124,30 @@ class PlayerController:
         """Increase electrical load target in small increments."""
         delta = self.load_step * max(1, steps)
         self._set_desired_load(state, state.electrical.desired_load_target + delta)
+        self._note_action(state, "load_up")
 
     def decrease_load_target(self, state: PlantState, steps: int = 1) -> None:
         """Decrease electrical load target in small increments."""
         delta = self.load_step * max(1, steps)
         self._set_desired_load(state, state.electrical.desired_load_target - delta)
+        self._note_action(state, "load_down")
 
     def set_mode_islanded(self, state: PlantState) -> None:
         """Set generator to isolated mode with lower target demand."""
         state.electrical.grid_mode = "islanded"
         self._set_desired_load(state, 30.0)
+        self._note_action(state, "mode_islanded")
 
     def set_mode_grid_follow(self, state: PlantState) -> None:
         """Set generator to grid-follow mode."""
         state.electrical.grid_mode = "grid_follow"
+        self._note_action(state, "mode_grid_follow")
 
     def emergency_load_shed(self, state: PlantState) -> None:
         """Trigger immediate fictional load shedding target."""
         state.electrical.grid_mode = "load_shed"
         self._set_desired_load(state, 10.0)
+        self._note_action(state, "load_shed")
 
     def acknowledge_alarm(self, state: PlantState, alarm_name: str) -> None:
         """Acknowledge an alarm without resolving its root condition."""
@@ -136,6 +156,7 @@ class PlayerController:
             state.safety.alarm_history.append(f"t={state.time:.1f} acknowledged: {alarm_name}")
             if len(state.safety.alarm_history) > 50:
                 state.safety.alarm_history.pop(0)
+            self._note_action(state, "ack_alarm")
 
     def set_advisory_mute(self, state: PlantState, muted: bool) -> None:
         """Mute or unmute advisory-level alarm repetition."""
@@ -149,6 +170,13 @@ class PlayerController:
     def recent_alarm_history(self, state: PlantState, limit: int = 8) -> list[str]:
         """Return recent alarm history entries for UI/console display."""
         return state.safety.alarm_history[-max(1, limit):]
+
+
+    def _note_action(self, state: PlantState, action: str) -> None:
+        """Record player actions for advisor analysis and review."""
+        state.control.player_action_log.append(action)
+        if len(state.control.player_action_log) > 120:
+            state.control.player_action_log.pop(0)
 
     def apply_step(self, state: PlantState) -> None:
         """Rate-limit motion so controls affect systems indirectly and smoothly."""

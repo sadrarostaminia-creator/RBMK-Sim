@@ -108,6 +108,7 @@ class TutorialScenario:
         self.actions.clear()
         state.control.autopilot_enabled = False
         state.control.tutorial_active = True
+        state.advisor.mode = "training"
         self._sync_stage_to_state(state)
         self._announce_stage()
 
@@ -202,6 +203,7 @@ class TutorialScenario:
                 state.control.tutorial_active = False
                 state.control.tutorial_stage = ""
                 state.control.tutorial_objective = ""
+                state.advisor.mode = "guidance"
             self.progress["completed_runs"] = int(self.progress.get("completed_runs", 0)) + 1
             self.progress["last_completed"] = self.completed
             self.progress["last_skipped"] = self.skipped
