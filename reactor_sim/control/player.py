@@ -17,6 +17,8 @@ class PlayerController:
         pump_rate_limit: float = 4.0,
         valve_step: float = 4.0,
         valve_rate_limit: float = 4.0,
+        load_step: float = 5.0,
+        load_rate_limit: float = 4.0,
     ) -> None:
         """Initialize manual control limits and defaults."""
         self.rod_step = max(0.1, rod_step)
@@ -25,6 +27,8 @@ class PlayerController:
         self.pump_rate_limit = max(0.1, pump_rate_limit)
         self.valve_step = max(0.1, valve_step)
         self.valve_rate_limit = max(0.1, valve_rate_limit)
+        self.load_step = max(0.1, load_step)
+        self.load_rate_limit = max(0.1, load_rate_limit)
 
     def raise_rods(self, state: PlantState, steps: int = 1) -> None:
         """Withdraw rods in small increments to increase potential reactivity."""
@@ -89,6 +93,30 @@ class PlayerController:
         """Apply fictional high-load valve preset."""
         self._set_desired_valve(state, 80.0)
 
+    def increase_load_target(self, state: PlantState, steps: int = 1) -> None:
+        """Increase electrical load target in small increments."""
+        delta = self.load_step * max(1, steps)
+        self._set_desired_load(state, state.electrical.desired_load_target + delta)
+
+    def decrease_load_target(self, state: PlantState, steps: int = 1) -> None:
+        """Decrease electrical load target in small increments."""
+        delta = self.load_step * max(1, steps)
+        self._set_desired_load(state, state.electrical.desired_load_target - delta)
+
+    def set_mode_islanded(self, state: PlantState) -> None:
+        """Set generator to isolated mode with lower target demand."""
+        state.electrical.grid_mode = "islanded"
+        self._set_desired_load(state, 30.0)
+
+    def set_mode_grid_follow(self, state: PlantState) -> None:
+        """Set generator to grid-follow mode."""
+        state.electrical.grid_mode = "grid_follow"
+
+    def emergency_load_shed(self, state: PlantState) -> None:
+        """Trigger immediate fictional load shedding target."""
+        state.electrical.grid_mode = "load_shed"
+        self._set_desired_load(state, 10.0)
+
     def apply_step(self, state: PlantState) -> None:
         """Rate-limit motion so controls affect systems indirectly and smoothly."""
         reactor = state.reactor
@@ -108,6 +136,11 @@ class PlayerController:
         limited_valve_delta = max(-self.valve_rate_limit, min(self.valve_rate_limit, valve_delta))
         turbine.valve_opening = clamp_percent(turbine.valve_opening + limited_valve_delta)
 
+        electrical = state.electrical
+        load_delta = electrical.desired_load_target - electrical.load_target
+        limited_load_delta = max(-self.load_rate_limit, min(self.load_rate_limit, load_delta))
+        electrical.load_target = clamp_percent(electrical.load_target + limited_load_delta)
+
     def _set_desired_rod(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired rod insertion request."""
         state.reactor.desired_rod_insertion = clamp_percent(desired)
@@ -119,6 +152,10 @@ class PlayerController:
     def _set_desired_valve(self, state: PlantState, desired: float) -> None:
         """Validate and clamp desired valve opening request."""
         state.turbine.desired_valve_opening = clamp_percent(desired)
+
+    def _set_desired_load(self, state: PlantState, desired: float) -> None:
+        """Validate and clamp desired electrical load request."""
+        state.electrical.desired_load_target = clamp_percent(desired)
 
     # TODO: expose this controller to autopilot command arbitration.
     # TODO: add AI advisor suggestions mapped to these control actions.

@@ -15,29 +15,31 @@ class ConsoleRenderer:
     def render(self, state: PlantState) -> None:
         """Render a lightweight status table to the console."""
         reactor = state.reactor
-        cooling = state.cooling
         turbine = state.turbine
+        electrical = state.electrical
         safety = state.safety
         warnings = ", ".join(safety.warnings_active) or "None"
 
         fields = [
             f"t={state.time:.1f}",
-            f"CoreT={reactor.temperature:.1f}",
-            f"Pump={cooling.pump_speed:.1f}%",
-            f"SteamP={turbine.steam_pressure:.1f}",
-            f"Valve={turbine.valve_opening:.1f}%",
+            f"CoreP={reactor.power:.1f}%",
             f"RPM={turbine.rpm:.1f}",
-            f"TurbEff={turbine.turbine_efficiency:.1f}%",
-            f"TurbHP={turbine.turbine_health:.1f}%",
+            f"ElecOut={electrical.output_power:.1f}%",
+            f"GenEff={electrical.generator_efficiency:.1f}%",
+            f"GridD={electrical.grid_demand:.1f}%",
+            f"GridStb={electrical.grid_stability:.1f}%",
+            f"Mode={electrical.grid_mode}",
         ]
 
         if self.debug:
             fields.extend(
                 [
-                    f"SteamQ={turbine.steam_quality:.1f}%",
-                    f"SteamProd={turbine.steam_production_rate:.1f}",
-                    f"SteamLoss={turbine.steam_loss_rate:.1f}",
-                    f"MechLoad={turbine.mechanical_load:.1f}",
+                    f"Valve={turbine.valve_opening:.1f}%",
+                    f"LoadT={electrical.load_target:.1f}%",
+                    f"GenT={electrical.generator_temperature:.1f}",
+                    f"GenH={electrical.generator_health:.1f}%",
+                    f"Bal={electrical.power_balance:.1f}",
+                    f"Penalty={electrical.penalty_level:.1f}",
                 ]
             )
 

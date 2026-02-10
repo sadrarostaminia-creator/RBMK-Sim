@@ -50,6 +50,7 @@ class TurbineSystemState:
     valve_opening: float = 30.0
     desired_valve_opening: float = 30.0
     mechanical_load: float = 20.0
+    electrical_resistance: float = 0.0
     turbine_efficiency: float = 78.0
     turbine_health: float = 100.0
     warnings_active: List[str] = field(default_factory=list)
@@ -57,11 +58,20 @@ class TurbineSystemState:
 
 @dataclass
 class ElectricalSystemState:
-    """Abstract electrical system state."""
+    """Abstract generator and grid state."""
 
-    output_power: float = 40.0
-    grid_load: float = 50.0
-    efficiency: float = 70.0
+    output_power: float = 15.0
+    generator_efficiency: float = 86.0
+    generator_temperature: float = 30.0
+    generator_health: float = 100.0
+    load_target: float = 45.0
+    desired_load_target: float = 45.0
+    grid_mode: str = "grid_follow"
+    grid_demand: float = 50.0
+    power_balance: float = 0.0
+    grid_stability: float = 92.0
+    penalty_level: float = 0.0
+    warnings_active: List[str] = field(default_factory=list)
 
 
 @dataclass

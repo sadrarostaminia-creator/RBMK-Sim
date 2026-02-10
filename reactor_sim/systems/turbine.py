@@ -17,6 +17,7 @@ class TurbineSystem:
         self.quality_penalty = 0.15
         self.rpm_inertia = 0.08
         self.rpm_drag = 0.05
+        self.load_drag_factor = 0.01
         self.valve_wear_factor = 0.018
         self.overspeed_wear_factor = 0.02
 
@@ -58,11 +59,14 @@ class TurbineSystem:
         if desired_rpm > max_rpm:
             desired_rpm = max_rpm + (desired_rpm - max_rpm) * 0.2
 
+        load_drag = turbine.electrical_resistance * self.load_drag_factor
         turbine.rpm = clamp_percent(
-            turbine.rpm + (desired_rpm - turbine.rpm) * self.rpm_inertia - self.rpm_drag
+            turbine.rpm + (desired_rpm - turbine.rpm) * self.rpm_inertia - self.rpm_drag - load_drag
         )
 
-        turbine.mechanical_load = clamp_percent(turbine.rpm * (0.4 + turbine.valve_opening / 300.0))
+        turbine.mechanical_load = clamp_percent(
+            turbine.rpm * (0.35 + turbine.valve_opening / 320.0) + turbine.electrical_resistance * 0.4
+        )
 
         wear = 0.0
         if turbine.valve_opening > 85.0:
