@@ -36,8 +36,13 @@ class SimulationEngine:
         self.anomalies = AnomalyManager()
         self.event_log = EventLog()
         self.renderer = ConsoleRenderer()
+        self.tutorial = None
         self.paused = False
         self.speed_multiplier = 1.0
+
+    def attach_tutorial(self, tutorial) -> None:
+        """Attach tutorial scenario manager to apply guardrails and progression checks."""
+        self.tutorial = tutorial
 
     def set_paused(self, paused: bool) -> None:
         """Pause or resume the simulation loop."""
@@ -53,6 +58,9 @@ class SimulationEngine:
             return
         self.state.time += self.state.tick * self.speed_multiplier
 
+        if self.tutorial is not None:
+            self.tutorial.apply_guardrails(self.state)
+
         self.autopilot.update_step(self.state)
         self.player.apply_step(self.state)
 
@@ -63,6 +71,10 @@ class SimulationEngine:
         self.anomalies.update_step(self.state)
         self.sensors.update_step(self.state)
         self.safety.update_step(self.state)
+
+        if self.tutorial is not None:
+            self.tutorial.post_step(self.state)
+
         self.event_log.capture_snapshot(self.state)
 
     def run(self, steps: int = 10, render: bool = True) -> None:

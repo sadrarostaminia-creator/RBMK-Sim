@@ -112,6 +112,9 @@ class ControlSystemState:
         default_factory=lambda: {"rods": 0, "pump": 0, "valve": 0, "load": 0}
     )
     decision_log: List[str] = field(default_factory=list)
+    tutorial_active: bool = False
+    tutorial_stage: str = ""
+    tutorial_objective: str = ""
 
 
 @dataclass

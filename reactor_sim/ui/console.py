@@ -31,6 +31,8 @@ class ConsoleRenderer:
             f"SENS Out={sensors.values.get('generator_output', 0.0):.1f}%",
         ]
         print(" | ".join(top))
+        if control.tutorial_active:
+            print(f"TUTORIAL: {control.tutorial_stage} :: {control.tutorial_objective}")
 
         alarm_lines = []
         for name, severity in safety.alarm_severity.items():
